@@ -4,49 +4,111 @@
 <meta charset="UTF-8">
 <title>Nakuru County Revenue Dashboard</title>
 
-<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body { margin:0; font-family: Arial; display:flex; flex-direction:column; height:100vh; background:#f4f6f9; }
-header { background:linear-gradient(135deg,#2c7be5,#00a8a8); color:white; padding:12px; font-size:20px; }
-#container { display:flex; flex:1; }
-#sidebar { width:320px; background:#1f2937; color:white; padding:12px; overflow:auto; }
-#map { flex:1; }
-
-.card { background:#111827; padding:12px; margin-bottom:12px; border-radius:10px; }
-
-input,select,button {
-  width:100%;
-  padding:8px;
-  margin-top:6px;
-  border-radius:6px;
-  border:none;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
-button {
-  background:#2c7be5;
-  color:white;
-  cursor:pointer;
+/* HEADER */
+header {
+  background: #2c7be5;
+  color: white;
+  padding: 12px;
+  font-size: 18px;
+  text-align: center;
 }
 
-button:hover { background:#1a5fd0; }
+/* LAYOUT */
+#container {
+  display: flex;
+  flex: 1;
+}
 
-.stat { font-size:14px; margin:4px 0; }
-.big { font-size:18px; font-weight:bold; }
+/* SIDEBAR */
+#sidebar {
+  width: 320px;
+  background: #1e1e1e;
+  color: white;
+  padding: 10px;
+  transition: all 0.3s ease;
+  overflow-y: auto;
+}
+
+/* COLLAPSED SIDEBAR */
+#sidebar.collapsed {
+  width: 70px; /* 👈 keeps button visible */
+  padding: 10px 5px;
+  overflow: hidden;
+}
+
+/* HIDE CONTENT WHEN COLLAPSED */
+#sidebar.collapsed .card {
+  display: none;
+}
+
+/* TOGGLE BUTTON INSIDE SIDEBAR */
+#toggleSidebar {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: none;
+  background: #1a5fd0;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+/* MAP */
+#map {
+  flex: 1;
+}
+
+/* UI CARDS */
+.card {
+  background: #2a2a2a;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+/* INPUTS */
+input, select, button {
+  width: 100%;
+  padding: 6px;
+  margin-top: 5px;
+}
+
+/* AUTOCOMPLETE */
+#suggestions {
+  background: white;
+  color: black;
+  max-height: 120px;
+  overflow-y: auto;
+  border-radius: 4px;
+}
 </style>
 </head>
 
 <body>
 
-<header>🏛️ Nakuru County Revenue Dashboard</header>
+<header>
+  Nakuru Land Rates System
+</header>
 
 <div id="container">
 
+<!-- SIDEBAR -->
 <div id="sidebar">
+
+<button id="toggleSidebar" onclick="toggleSidebar()">☰</button>
 
 <div class="card">
 <h3>Search</h3>
@@ -63,6 +125,14 @@ button:hover { background:#1a5fd0; }
 <option value="not">Not Paid</option>
 <option value="partial">Partial</option>
 </select>
+</div>
+
+<!-- ✅ SLIDER -->
+<div class="card">
+<h3>Amount Due Filter</h3>
+<input type="range" id="amountSlider" min="0" max="100000" step="1000" value="100000"
+       oninput="filterByAmount(this.value)">
+<p>Max Amount Due: <span id="sliderValue">100000</span></p>
 </div>
 
 <div class="card" id="stats"></div>
@@ -83,14 +153,12 @@ button:hover { background:#1a5fd0; }
 
 </div>
 
+<!-- MAP -->
 <div id="map"></div>
 
 </div>
 
-<!-- ✅ Load Leaflet FIRST -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<!-- ✅ Your JS -->
 <script src="app.js"></script>
 
 </body>
