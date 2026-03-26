@@ -10,19 +10,22 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background: #f4f6f9;
 }
 
 /* HEADER */
 header {
-  background: #2c7be5;
+  background: linear-gradient(90deg, #2c7be5, #1a5fd0);
   color: white;
-  padding: 12px;
-  font-size: 18px;
+  padding: 14px;
+  font-size: 20px;
   text-align: center;
+  font-weight: bold;
+  letter-spacing: 0.5px;
 }
 
 /* LAYOUT */
@@ -41,19 +44,18 @@ header {
   overflow-y: auto;
 }
 
-/* COLLAPSED SIDEBAR */
+/* COLLAPSED */
 #sidebar.collapsed {
-  width: 70px; /* 👈 keeps button visible */
+  width: 70px;
   padding: 10px 5px;
-  overflow: hidden;
 }
 
-/* HIDE CONTENT WHEN COLLAPSED */
-#sidebar.collapsed .card {
+#sidebar.collapsed .card,
+#sidebar.collapsed .welcome {
   display: none;
 }
 
-/* TOGGLE BUTTON INSIDE SIDEBAR */
+/* TOGGLE BUTTON */
 #toggleSidebar {
   width: 100%;
   margin-bottom: 10px;
@@ -63,7 +65,6 @@ header {
   color: white;
   cursor: pointer;
   border-radius: 6px;
-  font-size: 16px;
 }
 
 /* MAP */
@@ -71,12 +72,41 @@ header {
   flex: 1;
 }
 
-/* UI CARDS */
+/* CARDS */
 .card {
   background: #2a2a2a;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* WELCOME SECTION */
+.welcome {
+  background: linear-gradient(135deg, #2c7be5, #4aa3ff);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.welcome h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.welcome p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* HOW IT WORKS */
+.guide {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.guide li {
+  margin-bottom: 6px;
 }
 
 /* INPUTS */
@@ -84,6 +114,8 @@ input, select, button {
   width: 100%;
   padding: 6px;
   margin-top: 5px;
+  border-radius: 4px;
+  border: none;
 }
 
 /* AUTOCOMPLETE */
@@ -93,6 +125,12 @@ input, select, button {
   max-height: 120px;
   overflow-y: auto;
   border-radius: 4px;
+}
+
+/* SMALL TEXT */
+.small {
+  font-size: 12px;
+  opacity: 0.8;
 }
 </style>
 </head>
@@ -110,6 +148,29 @@ input, select, button {
 
 <button id="toggleSidebar" onclick="toggleSidebar()">☰</button>
 
+<!-- 🔥 WELCOME SECTION -->
+<div class="welcome">
+<h2>Welcome 👋</h2>
+<p>
+This dashboard helps you monitor land rates, track payments, 
+and analyze revenue performance across parcels in Nakuru County.
+</p>
+</div>
+
+<!-- 📘 HOW IT WORKS -->
+<div class="card">
+<h3>How It Works</h3>
+<ul class="guide">
+<li>🔍 Search parcels using plot number or owner name</li>
+<li>🎛️ Filter parcels by payment status</li>
+<li>🎚️ Adjust the slider to filter by amount due</li>
+<li>🗺️ Click parcels on the map to view details</li>
+<li>📊 View charts for revenue insights</li>
+<li>📤 Export filtered data as CSV</li>
+</ul>
+</div>
+
+<!-- SEARCH -->
 <div class="card">
 <h3>Search</h3>
 <input id="searchBox" placeholder="Search plot or owner" oninput="showSuggestions()">
@@ -117,6 +178,7 @@ input, select, button {
 <button onclick="smartSearch()">Search</button>
 </div>
 
+<!-- FILTER -->
 <div class="card">
 <h3>Filter</h3>
 <select id="statusFilter" onchange="applyFilter()">
@@ -127,12 +189,13 @@ input, select, button {
 </select>
 </div>
 
-<!-- ✅ SLIDER -->
+<!-- SLIDER -->
 <div class="card">
 <h3>Amount Due Filter</h3>
 <input type="range" id="amountSlider" min="0" max="100000" step="1000" value="100000"
        oninput="filterByAmount(this.value)">
 <p>Max Amount Due: <span id="sliderValue">100000</span></p>
+<p class="small">Filter parcels based on outstanding balance</p>
 </div>
 
 <div class="card" id="stats"></div>
