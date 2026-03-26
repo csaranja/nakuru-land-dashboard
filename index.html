@@ -3,171 +3,171 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Land Rates Monitoring System</title>
 
-<title>Nakuru County Revenue Dashboard</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body {
-  margin: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: #f4f6f9;
+
+/* ===== GLOBAL ===== */
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI, Arial, sans-serif;
 }
 
-/* HEADER */
-header {
-  background: linear-gradient(90deg, #2c7be5, #1a5fd0);
-  color: white;
-  padding: 14px;
-  font-size: 18px;
-  text-align: center;
+body{
+height:100vh;
+display:flex;
+flex-direction:column;
+background:#f3f6fb;
 }
 
-/* CONTAINER */
-#container {
-  display: flex;
-  flex: 1;
-  position: relative;
+/* ===== HEADER ===== */
+header{
+background:linear-gradient(90deg,#2563eb,#1e40af);
+color:white;
+padding:14px 18px;
+display:flex;
+flex-direction:column;
 }
 
-/* SIDEBAR */
-#sidebar {
-  width: 320px;
-  background: #1e1e1e;
-  color: white;
-  padding: 10px;
-  overflow-y: auto;
-  transition: 0.3s;
+header h1{
+font-size:18px;
 }
 
-/* DESKTOP COLLAPSE */
-#sidebar.collapsed {
-  width: 70px;
+header p{
+font-size:13px;
+opacity:0.9;
 }
 
-/* MOBILE MODE */
-@media (max-width: 768px) {
-
-  #sidebar {
-    position: absolute;
-    top: 0;
-    left: -100%;
-    height: 100%;
-    width: 260px;
-    z-index: 1000;
-  }
-
-  #sidebar.active {
-    left: 0;
-  }
-
-  #map {
-    width: 100%;
-  }
-
-  /* Floating menu button */
-  #mobileMenuBtn {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 1100;
-    background: #2c7be5;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 6px;
-  }
+/* ===== LAYOUT ===== */
+#container{
+flex:1;
+display:flex;
+overflow:hidden;
 }
 
-/* MAP */
-#map {
-  flex: 1;
+/* ===== SIDEBAR ===== */
+#sidebar{
+width:320px;
+background:#0f172a;
+color:white;
+padding:16px;
+overflow-y:auto;
+transition:0.3s;
+position:relative;
 }
 
-/* CARDS */
-.card {
-  background: #2a2a2a;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 10px;
+#sidebar.collapsed{
+width:70px;
 }
 
-/* WELCOME */
-.welcome {
-  background: linear-gradient(135deg, #2c7be5, #4aa3ff);
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 12px;
+#sidebar.collapsed .content{
+display:none;
 }
 
-/* BUTTON */
-#toggleSidebar {
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 8px;
-  border: none;
-  background: #1a5fd0;
-  color: white;
-  border-radius: 6px;
+/* ===== COLLAPSE BUTTON (INSIDE SIDEBAR) ===== */
+#collapseBtn{
+position:absolute;
+top:12px;
+right:12px;
+background:#2563eb;
+border:none;
+color:white;
+padding:6px 10px;
+border-radius:8px;
+cursor:pointer;
 }
 
-/* INPUTS */
-input, select, button {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
+/* ===== MAP ===== */
+#map{
+flex:1;
 }
 
-/* SUGGESTIONS */
-#suggestions {
-  background: white;
-  color: black;
-  max-height: 120px;
-  overflow-y: auto;
+/* ===== CARDS ===== */
+.card{
+background:#1e293b;
+padding:14px;
+border-radius:12px;
+margin-bottom:14px;
 }
+
+.card h3{
+font-size:15px;
+margin-bottom:8px;
+color:#60a5fa;
+}
+
+/* ===== INPUTS ===== */
+input,select,button{
+width:100%;
+padding:10px;
+margin-top:6px;
+border:none;
+border-radius:8px;
+font-size:14px;
+}
+
+input,select{
+background:#f1f5f9;
+}
+
+button{
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+/* ===== LEGEND ===== */
+.legend{
+background:white;
+padding:10px;
+border-radius:8px;
+box-shadow:0 2px 8px rgba(0,0,0,0.2);
+font-size:13px;
+}
+
+.legend i{
+width:14px;
+height:14px;
+float:left;
+margin-right:6px;
+opacity:0.8;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-  Nakuru Land Rates System
+<h1>Land Rates Monitoring System</h1>
+<p id="welcomeMessage">Welcome message loading...</p>
 </header>
-
-<!-- 📱 MOBILE MENU BUTTON -->
-<button id="mobileMenuBtn" onclick="toggleMobileMenu()">☰</button>
 
 <div id="container">
 
-<!-- SIDEBAR -->
 <div id="sidebar">
 
-<button id="toggleSidebar" onclick="toggleSidebar()">☰ Collapse</button>
+<button id="collapseBtn" onclick="toggleSidebar()">⮜</button>
 
-<div class="welcome">
-<h3>Welcome 👋</h3>
-<p>Track land payments, filter parcels, and analyze revenue easily.</p>
-</div>
+<div class="content">
 
 <div class="card">
-<h3>How It Works</h3>
-<p>Search → Filter → View Map → Analyze → Export</p>
-</div>
-
-<div class="card">
-<h3>Search</h3>
-<input id="searchBox" placeholder="Search plot or owner" oninput="showSuggestions()">
-<div id="suggestions"></div>
+<h3>Search Parcel</h3>
+<input id="searchBox" placeholder="Plot number or owner name">
 <button onclick="smartSearch()">Search</button>
 </div>
 
 <div class="card">
-<h3>Filter</h3>
+<h3>Filter by Status</h3>
 <select id="statusFilter" onchange="applyFilter()">
 <option value="all">All</option>
 <option value="paid">Paid</option>
@@ -177,9 +177,8 @@ input, select, button {
 </div>
 
 <div class="card">
-<h3>Amount Due</h3>
-<input type="range" min="0" max="100000" value="100000"
-       oninput="filterByAmount(this.value)">
+<h3>Filter by Amount Due</h3>
+<input type="range" min="0" max="100000" value="100000" oninput="filterByAmount(this.value)">
 <p id="sliderValue">100000</p>
 </div>
 
@@ -198,21 +197,13 @@ input, select, button {
 </div>
 
 </div>
+</div>
 
 <div id="map"></div>
-
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="app.js"></script>
-
-<script>
-// 📱 MOBILE MENU TOGGLE
-function toggleMobileMenu() {
-  const sidebar = document.getElementById("sidebar");
-  sidebar.classList.toggle("active");
-}
-</script>
 
 </body>
 </html>
