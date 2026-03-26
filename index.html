@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Nakuru County Revenue Dashboard</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -22,16 +24,15 @@ header {
   background: linear-gradient(90deg, #2c7be5, #1a5fd0);
   color: white;
   padding: 14px;
-  font-size: 20px;
+  font-size: 18px;
   text-align: center;
-  font-weight: bold;
-  letter-spacing: 0.5px;
 }
 
-/* LAYOUT */
+/* CONTAINER */
 #container {
   display: flex;
   flex: 1;
+  position: relative;
 }
 
 /* SIDEBAR */
@@ -40,31 +41,47 @@ header {
   background: #1e1e1e;
   color: white;
   padding: 10px;
-  transition: all 0.3s ease;
   overflow-y: auto;
+  transition: 0.3s;
 }
 
-/* COLLAPSED */
+/* DESKTOP COLLAPSE */
 #sidebar.collapsed {
   width: 70px;
-  padding: 10px 5px;
 }
 
-#sidebar.collapsed .card,
-#sidebar.collapsed .welcome {
-  display: none;
-}
+/* MOBILE MODE */
+@media (max-width: 768px) {
 
-/* TOGGLE BUTTON */
-#toggleSidebar {
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 8px;
-  border: none;
-  background: #1a5fd0;
-  color: white;
-  cursor: pointer;
-  border-radius: 6px;
+  #sidebar {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    height: 100%;
+    width: 260px;
+    z-index: 1000;
+  }
+
+  #sidebar.active {
+    left: 0;
+  }
+
+  #map {
+    width: 100%;
+  }
+
+  /* Floating menu button */
+  #mobileMenuBtn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1100;
+    background: #2c7be5;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+  }
 }
 
 /* MAP */
@@ -78,10 +95,9 @@ header {
   padding: 12px;
   margin-bottom: 12px;
   border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-/* WELCOME SECTION */
+/* WELCOME */
 .welcome {
   background: linear-gradient(135deg, #2c7be5, #4aa3ff);
   padding: 15px;
@@ -89,48 +105,30 @@ header {
   margin-bottom: 12px;
 }
 
-.welcome h2 {
-  margin: 0 0 8px;
-  font-size: 18px;
-}
-
-.welcome p {
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-/* HOW IT WORKS */
-.guide {
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.guide li {
-  margin-bottom: 6px;
+/* BUTTON */
+#toggleSidebar {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: none;
+  background: #1a5fd0;
+  color: white;
+  border-radius: 6px;
 }
 
 /* INPUTS */
 input, select, button {
   width: 100%;
-  padding: 6px;
+  padding: 8px;
   margin-top: 5px;
-  border-radius: 4px;
-  border: none;
 }
 
-/* AUTOCOMPLETE */
+/* SUGGESTIONS */
 #suggestions {
   background: white;
   color: black;
   max-height: 120px;
   overflow-y: auto;
-  border-radius: 4px;
-}
-
-/* SMALL TEXT */
-.small {
-  font-size: 12px;
-  opacity: 0.8;
 }
 </style>
 </head>
@@ -141,36 +139,26 @@ input, select, button {
   Nakuru Land Rates System
 </header>
 
+<!-- 📱 MOBILE MENU BUTTON -->
+<button id="mobileMenuBtn" onclick="toggleMobileMenu()">☰</button>
+
 <div id="container">
 
 <!-- SIDEBAR -->
 <div id="sidebar">
 
-<button id="toggleSidebar" onclick="toggleSidebar()">☰</button>
+<button id="toggleSidebar" onclick="toggleSidebar()">☰ Collapse</button>
 
-<!-- 🔥 WELCOME SECTION -->
 <div class="welcome">
-<h2>Welcome 👋</h2>
-<p>
-This dashboard helps you monitor land rates, track payments, 
-and analyze revenue performance across parcels in Nakuru County.
-</p>
+<h3>Welcome 👋</h3>
+<p>Track land payments, filter parcels, and analyze revenue easily.</p>
 </div>
 
-<!-- 📘 HOW IT WORKS -->
 <div class="card">
 <h3>How It Works</h3>
-<ul class="guide">
-<li>🔍 Search parcels using plot number or owner name</li>
-<li>🎛️ Filter parcels by payment status</li>
-<li>🎚️ Adjust the slider to filter by amount due</li>
-<li>🗺️ Click parcels on the map to view details</li>
-<li>📊 View charts for revenue insights</li>
-<li>📤 Export filtered data as CSV</li>
-</ul>
+<p>Search → Filter → View Map → Analyze → Export</p>
 </div>
 
-<!-- SEARCH -->
 <div class="card">
 <h3>Search</h3>
 <input id="searchBox" placeholder="Search plot or owner" oninput="showSuggestions()">
@@ -178,7 +166,6 @@ and analyze revenue performance across parcels in Nakuru County.
 <button onclick="smartSearch()">Search</button>
 </div>
 
-<!-- FILTER -->
 <div class="card">
 <h3>Filter</h3>
 <select id="statusFilter" onchange="applyFilter()">
@@ -189,24 +176,20 @@ and analyze revenue performance across parcels in Nakuru County.
 </select>
 </div>
 
-<!-- SLIDER -->
 <div class="card">
-<h3>Amount Due Filter</h3>
-<input type="range" id="amountSlider" min="0" max="100000" step="1000" value="100000"
+<h3>Amount Due</h3>
+<input type="range" min="0" max="100000" value="100000"
        oninput="filterByAmount(this.value)">
-<p>Max Amount Due: <span id="sliderValue">100000</span></p>
-<p class="small">Filter parcels based on outstanding balance</p>
+<p id="sliderValue">100000</p>
 </div>
 
 <div class="card" id="stats"></div>
 
 <div class="card">
-<h3>Payment Status</h3>
 <canvas id="chart"></canvas>
 </div>
 
 <div class="card">
-<h3>Revenue Overview</h3>
 <canvas id="barChart"></canvas>
 </div>
 
@@ -216,13 +199,20 @@ and analyze revenue performance across parcels in Nakuru County.
 
 </div>
 
-<!-- MAP -->
 <div id="map"></div>
 
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="app.js"></script>
+
+<script>
+// 📱 MOBILE MENU TOGGLE
+function toggleMobileMenu() {
+  const sidebar = document.getElementById("sidebar");
+  sidebar.classList.toggle("active");
+}
+</script>
 
 </body>
 </html>
