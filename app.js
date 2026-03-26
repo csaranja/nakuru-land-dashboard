@@ -1,19 +1,16 @@
 let pieChart;
 let barChart;
 
-// ✅ 1. Create map
 const map = L.map('map').setView([-1.286389, 36.817223], 13);
 
-// ✅ 2. Basemap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// ✅ Globals
 let geojsonLayer;
 let searchIndex = [];
+let currentMaxAmount = 100000; // ✅ slider state
 
-// 💰 Format money (KES)
 function formatMoney(value) {
     return value.toLocaleString('en-KE', {
         style: 'currency',
@@ -21,20 +18,15 @@ function formatMoney(value) {
     });
 }
 
-// 🎨 Color logic
 function getColor(status) {
     if (!status) return "gray";
-
     status = status.toLowerCase();
-
     if (status.includes("not")) return "red";
     if (status.includes("partial")) return "orange";
     if (status.includes("paid")) return "green";
-
     return "gray";
 }
 
-// 🗺️ Style
 function style(feature) {
     return {
         color: getColor(feature.properties["Payment Status"]),
@@ -43,20 +35,15 @@ function style(feature) {
     };
 }
 
-// 📍 Popup
 function onEachFeature(feature, layer) {
     let content = "<b>Parcel Info</b><br>";
-
     for (let key in feature.properties) {
         content += `<b>${key}:</b> ${feature.properties[key]}<br>`;
     }
-
     content += `<br><button onclick="payParcel('${feature.properties.PLOTNO}')">Pay Now</button>`;
-
     layer.bindPopup(content);
 }
 
-// 📥 Load GeoJSON
 fetch('pacess.geojson')
 .then(res => res.json())
 .then(data => {
@@ -81,18 +68,57 @@ fetch('pacess.geojson')
     calculateStats();
 });
 
+// ✅ NEW FILTER FUNCTION (slider)
+function filterByAmount(value) {
+
+    currentMaxAmount = parseFloat(value);
+    document.getElementById("sliderValue").innerText = value;
+
+    applyAllFilters();
+}
+
+// ✅ COMBINED FILTER LOGIC
+function applyAllFilters() {
+
+    const selected = document.getElementById("statusFilter").value.toLowerCase();
+
+    geojsonLayer.eachLayer(layer => {
+
+        const props = layer.feature.properties;
+        const status = (props["Payment Status"] || "").toLowerCase();
+        const amountDue = parseFloat(props["Amount Due"]) || 0;
+
+        let statusMatch =
+            selected === "all" ||
+            (status && status.includes(selected));
+
+        let amountMatch = amountDue <= currentMaxAmount;
+
+        if (statusMatch && amountMatch) {
+            layer.addTo(map);
+        } else {
+            map.removeLayer(layer);
+        }
+    });
+
+    calculateStats();
+}
+
+// 🔁 UPDATED to use combined filters
+function applyFilter() {
+    applyAllFilters();
+}
+
+// (rest of your code stays EXACTLY the same below 👇)
 
 // 🔍 SMART SEARCH
 function smartSearch() {
-
     const input = document.getElementById("searchBox").value.trim().toLowerCase();
-
     geojsonLayer.resetStyle();
 
     let matched = [];
 
     geojsonLayer.eachLayer(layer => {
-
         const props = layer.feature.properties;
         const plot = props.PLOTNO;
         const owner = props["Owner Name"] || props.HSE_NAME;
@@ -108,11 +134,7 @@ function smartSearch() {
         }
 
         if (isMatch) {
-            layer.setStyle({
-                color: "yellow",
-                weight: 3
-            });
-
+            layer.setStyle({ color: "yellow", weight: 3 });
             matched.push(layer);
         }
     });
@@ -126,115 +148,32 @@ function smartSearch() {
     map.fitBounds(group.getBounds());
 }
 
+// (keep everything else unchanged…)
 
-// 🔽 AUTOCOMPLETE
-function showSuggestions() {
-
-    const input = document.getElementById("searchBox").value.toLowerCase();
-    const box = document.getElementById("suggestions");
-
-    box.innerHTML = "";
-
-    if (!input) {
-        box.style.display = "none";
-        return;
-    }
-
-    const matches = searchIndex.filter(item => 
-        (item.plot && item.plot.toString().includes(input)) ||
-        (item.owner && item.owner.toLowerCase().includes(input))
-    ).slice(0, 5);
-
-    matches.forEach(item => {
-        const div = document.createElement("div");
-
-        div.innerHTML = `<b>${item.plot || ""}</b> - ${item.owner || ""}`;
-
-        div.onclick = () => {
-            document.getElementById("searchBox").value = item.plot || item.owner;
-            box.style.display = "none";
-            zoomToLayer(item.layer);
-        };
-
-        box.appendChild(div);
-    });
-
-    box.style.display = "block";
-}
-
-
-// 📍 Zoom helper
-function zoomToLayer(layer) {
-    map.fitBounds(layer.getBounds(), { padding: [20, 20] });
-    layer.openPopup();
-}
-
-
-// 🎛️ FILTER
-function applyFilter() {
-
-    const selected = document.getElementById("statusFilter").value.toLowerCase();
-
-    geojsonLayer.eachLayer(layer => {
-
-        const status = layer.feature.properties["Payment Status"];
-
-        if (selected === "all") {
-            layer.addTo(map);
-        } 
-        else if (status && status.toLowerCase().includes(selected)) {
-            layer.addTo(map);
-        } 
-        else {
-            map.removeLayer(layer);
-        }
-    });
-
-    calculateStats();
-}
-
-
-// 📊 COUNTY DASHBOARD STATS
 function calculateStats() {
-
     let paid = 0, notPaid = 0, partial = 0, unknown = 0;
-
     let totalLandRent = 0;
     let totalAmountDue = 0;
 
     geojsonLayer.eachLayer(layer => {
-
         if (!map.hasLayer(layer)) return;
 
         const props = layer.feature.properties;
         const status = (props["Payment Status"] || "").toLowerCase();
 
-        // ✅ Clean classification
-        if (status.includes("not")) {
-        notPaid++;
-        } 
-        else if (status.includes("partial")) {
-        partial++;
-        } 
-        else if (status.includes("paid")) {
-        paid++;
-        } 
-        else {
-        unknown++;
-        }
+        if (status.includes("not")) notPaid++;
+        else if (status.includes("partial")) partial++;
+        else if (status.includes("paid")) paid++;
+        else unknown++;
 
-        const landRent = parseFloat(props["Land Rent Amount (KSH)"]) || 0;
-        const amountDue = parseFloat(props["Amount Due"]) || 0;
-
-        totalLandRent += landRent;
-        totalAmountDue += amountDue;
+        totalLandRent += parseFloat(props["Land Rent Amount (KSH)"]) || 0;
+        totalAmountDue += parseFloat(props["Amount Due"]) || 0;
     });
 
     const collected = totalLandRent - totalAmountDue;
     const outstanding = totalAmountDue;
     const efficiency = totalLandRent ? (collected / totalLandRent) * 100 : 0;
 
-    // 📊 Update UI
     document.getElementById("stats").innerHTML = `
         <b>Revenue Summary</b><br>
         💰 Collected: ${formatMoney(collected)}<br>
@@ -248,51 +187,35 @@ function calculateStats() {
         ⚪ Unknown: ${unknown}
     `;
 
-    // 📈 PIE CHART
     if (pieChart) pieChart.destroy();
-
     pieChart = new Chart(document.getElementById("chart"), {
         type: 'pie',
         data: {
             labels: ['Paid', 'Not Paid', 'Partial', 'Unknown'],
-            datasets: [{
-                data: [paid, notPaid, partial, unknown]
-            }]
+            datasets: [{ data: [paid, notPaid, partial, unknown] }]
         }
     });
 
-    // 📊 BAR CHART (Revenue)
     if (barChart) barChart.destroy();
-
     barChart = new Chart(document.getElementById("barChart"), {
         type: 'bar',
         data: {
             labels: ['Collected', 'Outstanding'],
-            datasets: [{
-                data: [collected, outstanding]
-            }]
+            datasets: [{ data: [collected, outstanding] }]
         }
     });
 }
 
-
-// 💳 MOCK PAYMENT
 function payParcel(plot) {
     alert("M-Pesa payment initiated for plot " + plot);
 }
 
-
-// 📤 EXPORT CSV
 function exportCSV() {
-
     let csv = "Plot,Owner,Status\n";
 
     geojsonLayer.eachLayer(layer => {
-
         if (!map.hasLayer(layer)) return;
-
         const props = layer.feature.properties;
-
         csv += `${props.PLOTNO},${props["Owner Name"]},${props["Payment Status"]}\n`;
     });
 
@@ -303,4 +226,15 @@ function exportCSV() {
     a.href = url;
     a.download = "parcels.csv";
     a.click();
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const btn = document.getElementById("toggleSidebar");
+
+    sidebar.classList.toggle("collapsed");
+
+    btn.innerHTML = sidebar.classList.contains("collapsed") ? "➡" : "☰";
+
+    setTimeout(() => map.invalidateSize(), 300);
 }
