@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nakuru County Revenue Dashboard</title>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { margin:0; font-family: Arial; display:flex; flex-direction:column; height:100vh; background:#f4f6f9; }
+header { background:linear-gradient(135deg,#2c7be5,#00a8a8); color:white; padding:12px; font-size:20px; }
+#container { display:flex; flex:1; }
+#sidebar { width:320px; background:#1f2937; color:white; padding:12px; overflow:auto; }
+#map { flex:1; }
+
+.card { background:#111827; padding:12px; margin-bottom:12px; border-radius:10px; }
+
+input,select,button {
+  width:100%;
+  padding:8px;
+  margin-top:6px;
+  border-radius:6px;
+  border:none;
+}
+
+button {
+  background:#2c7be5;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover { background:#1a5fd0; }
+
+.stat { font-size:14px; margin:4px 0; }
+.big { font-size:18px; font-weight:bold; }
+</style>
+</head>
+
+<body>
+
+<header>🏛️ Nakuru County Revenue Dashboard</header>
+
+<div id="container">
+
+<div id="sidebar">
+
+<div class="card">
+<h3>Search</h3>
+<input id="searchBox" placeholder="Search plot or owner" oninput="showSuggestions()">
+<div id="suggestions"></div>
+<button onclick="smartSearch()">Search</button>
+</div>
+
+<div class="card">
+<h3>Filter</h3>
+<select id="statusFilter" onchange="applyFilter()">
+<option value="all">All</option>
+<option value="paid">Paid</option>
+<option value="not">Not Paid</option>
+<option value="partial">Partial</option>
+</select>
+</div>
+
+<div class="card" id="stats"></div>
+
+<div class="card">
+<h3>Payment Status</h3>
+<canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+<h3>Revenue Overview</h3>
+<canvas id="barChart"></canvas>
+</div>
+
+<div class="card">
+<button onclick="exportCSV()">Export CSV</button>
+</div>
+
+</div>
+
+<div id="map"></div>
+
+</div>
+
+<!-- ✅ Load Leaflet FIRST -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- ✅ Your JS -->
+<script src="app.js"></script>
+
+</body>
+</html>
